@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetVax Vietnam - Theo Dõi Tiêm Ngừa Chó Mèo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3d7ab5 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(30, 58, 95, 0.15); }
+        .status-pending { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .status-done { background: linear-gradient(135deg, #10b981, #059669); }
+        .status-overdue { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-overlay { backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-paw text-2xl text-amber-300"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">PetVax Vietnam</h1>
+                        <p class="text-xs text-blue-200">Hệ thống quản lý tiêm ngừa thú cưng</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="hover:text-amber-300 transition font-medium">Tổng quan</a>
+                    <a href="#pets" class="hover:text-amber-300 transition font-medium">Thú cưng</a>
+                    <a href="#vaccines" class="hover:text-amber-300 transition font-medium">Vaccine</a>
+                    <a href="#schedule" class="hover:text-amber-300 transition font-medium">Lịch tiêm</a>
+                </nav>
+                <button onclick="openAddPetModal()" class="bg-amber-400 hover:bg-amber-500 text-gray-900 px-5 py-2.5 rounded-lg font-semibold transition shadow-lg">
+                    <i class="fas fa-plus mr-2"></i>Thêm thú cưng
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-16">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2 mb-8 md:mb-0">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">Bảo vệ sức khỏe<br>thú cưng của bạn</h2>
+                    <p class="text-blue-200 text-lg mb-6">Theo dõi lịch tiêm ngừa, nhận thông báo kịp thời và đảm bảo thú cưng luôn được bảo vệ tốt nhất.</p>
+                    <div class="flex space-x-4">
+                        <button onclick="openAddPetModal()" class="bg-white text-blue-900 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition shadow-lg">
+                            Bắt đầu ngay
+                        </button>
+                        <button class="border-2 border-white/50 px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition">
+                            Tìm hiểu thêm
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative">
+                        <div class="w-72 h-72 bg-white/10 rounded-full flex items-center justify-center">
+                            <div class="w-56 h-56 bg-white/20 rounded-full flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-shield-dog text-7xl text-amber-300 mb-2"></i>
+                                    <p class="text-sm text-blue-200">An toàn & Tin cậy</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Dashboard -->
+    <section id="dashboard" class="py-12 -mt-8">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover border-l-4 border-blue-600">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Tổng thú cưng</p>
+                            <p id="totalPets" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-paw text-2xl text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Đã tiêm đủ</p>
+                            <p id="vaccinatedPets" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-2xl text-green-500"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover border-l-4 border-amber-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Cần tiêm sớm</p>
+                            <p id="pendingVaccines" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-clock text-2xl text-amber-500"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover border-l-4 border-red-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Quá hạn</p>
+                            <p id="overduePets" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pets List -->
+    <section id="pets" class="py-12 bg-gray-100">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800">Danh sách thú cưng</h3>
+                    <p class="text-gray-500">Quản lý thông tin và lịch tiêm ngừa</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" id="searchPet" placeholder="Tìm kiếm..." class="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-64">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <select id="filterType" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="all">Tất cả</option>
+                        <option value="dog">Chó</option>
+                        <option value="cat">Mèo</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="petsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Pet cards will be rendered here -->
+            </div>
+            
+            <div id="emptyState" class="text-center py-16 hidden">
+                <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-paw text-4xl text-gray-400"></i>
+                </div>
+                <h4 class="text-xl font-semibold text-gray-600 mb-2">Chưa có thú cưng nào</h4>
+                <p class="text-gray-500 mb-4">Hãy thêm thú cưng đầu tiên của bạn</p>
+                <button onclick="openAddPetModal()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Thêm thú cưng
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vaccine Information -->
+    <section id="vaccines" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-800 mb-4">Thông tin Vaccine</h3>
+                <p class="text-gray-500 max-w-2xl mx-auto">Các loại vaccine quan trọng cho chó mèo tại Việt Nam theo khuyến cáo của Cục Thú y</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Dog Vaccines -->
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 card-hover">
+                    <div class="flex items-center mb-6">
+                        <div class="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-dog text-3xl text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800">Vaccine cho Chó</h4>
+                            <p class="text-blue-600">Bảo vệ toàn diện</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Vaccine 5 bệnh (5in1)</h5>
+                                    <p class="text-sm text-gray-500">Carré, Parvo, Viêm gan, Ho cũi, Phó cúm</p>
+                                </div>
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">Bắt buộc</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Vaccine 7 bệnh (7in1)</h5>
+                                    <p class="text-sm text-gray-500">5in1 + Lepto + Corona</p>
+                                </div>
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">Khuyến cáo</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Vaccine Dại</h5>
+                                    <p class="text-sm text-gray-500">Phòng bệnh dại - nguy hiểm</p>
+                                </div>
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">Bắt buộc</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cat Vaccines -->
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-8 card-hover">
+                    <div class="flex items-center mb-6">
+                        <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-cat text-3xl text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800">Vaccine cho Mèo</h4>
+                            <p class="text-amber-600">Bảo vệ toàn diện</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Vaccine 3 bệnh (FVRCP)</h5>
+                                    <p class="text-sm text-gray-500">Viêm mũi khí quản, Calici, Giảm bạch cầu</p>
+                                </div>
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">Bắt buộc</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Vaccine 4 bệnh (FVRCP+)</h5>
+                                    <p class="text-sm text-gray-500">3 bệnh + Chlamydia</p>
+                                </div>
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">Khuyến cáo</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Vaccine Dại</h5>
+                                    <p class="text-sm text-gray-500">Phòng bệnh dại - nguy hiểm</p>
+                                </div>
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">Bắt buộc</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vaccination Schedule -->
+    <section id="schedule" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-800 mb-4">Lịch tiêm sắp tới</h3>
+                <p class="text-gray-500">Theo dõi các mũi tiêm cần thực hiện</p>
+            </div>
+            
+            <div id="scheduleList" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left font-semibold">Thú cưng</th>
+                            <th class="px-6 py-4 text-left font-semibold">Loại Vaccine</th>
+                            <th class="px-6 py-4 text-left font-semibold">Ngày tiêm</th>
+                            <th class="px-6 py-4 text-left font-semibold">Trạng thái</th>
+                            <th class="px-6 py-4 text-left font-semibold">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleTableBody">
+                        <!-- Schedule rows will be rendered here -->
+                    </tbody>
+                </table>
+                <div id="emptySchedule" class="text-center py-12 hidden">
+                    <i class="fas fa-calendar-check text-5xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">Chưa có lịch tiêm nào</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-paw text-xl text-amber-300"></i>
+                        </div>
+                        <h4 class="text-xl font-bold">PetVax Vietnam</h4>
+                    </div>
+                    <p class="text-blue-200 text-sm">Hệ thống quản lý tiêm ngừa thú cưng hàng đầu Việt Nam. Bảo vệ sức khỏe thú cưng của bạn.</p>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Liên kết</h5>
+                    <ul class="space-y-2 text-blue-200 text-sm">
+                        <li><a href="#" class="hover:text-white transition">Trang chủ</a></li>
+                        <li><a href="#" class="hover:text-white transition">Về chúng tôi</a></li>
+                        <li><a href="#" class="hover:text-white transition">Dịch vụ</a></li>
+                        <li><a href="#" class="hover:text-white transition">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Hỗ trợ</h5>
+                    <ul class="space-y-2 text-blue-200 text-sm">
+                        <li><a href="#" class="hover:text-white transition">Hướng dẫn sử dụng</a></li>
+                        <li><a href="#" class="hover:text-white transition">Câu hỏi thường gặp</a></li>
+                        <li><a href="#" class="hover:text-white transition">Chính sách bảo mật</a></li>
+                        <li><a href="#" class="hover:text-white transition">Điều khoản sử dụng</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Liên hệ</h5>
+                    <ul class="space-y-2 text-blue-200 text-sm">
+                        <li><i class="fas fa-phone mr-2"></i>1900 xxxx</li>
+                        <li><i class="fas fa-envelope mr-2"></i>info@petvax.vn</li>
+                        <li><i class="fas fa-map-marker-alt mr-2"></i>Hà Nội, Việt Nam</li>
+                    </ul>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-white/20 mt-8 pt-8 text-center text-blue-200 text-sm">
+                <p>© 2024 PetVax Vietnam. Tất cả quyền được bảo lưu.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Add Pet Modal -->
+    <div id="addPetModal" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 fade-in">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-800">Thêm thú cưng mới</h3>
+                    <button onclick="closeAddPetModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
+                        <i class="fas fa-times text-gray-500"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="addPetForm" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tên thú cưng *</label>
+                    <input type="text" id="petName" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="VD: Milo, Lucky...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Loại *</label>
+                        <select id="petType" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Chọn loại</option>
+                            <option value="dog">🐕 Chó</option>
+                            <option value="cat">🐈 Mèo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Giống</label>
+                        <input type="text" id="petBreed" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="VD: Poodle, Mèo Anh...">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ngày sinh</label>
+                        <input type="date" id="petBirthdate" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cân nặng (kg)</label>
+                        <input type="number" id="petWeight" step="0.1" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="VD: 5.5">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tên chủ sở hữu *</label>
+                    <input type="text" id="ownerName" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="Họ và tên">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
+                    <input type="tel" id="ownerPhone" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none" placeholder="0xxx xxx xxx">
+                </div>
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeAddPetModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition">Hủy</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">Thêm thú cưng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Vaccine Modal -->
+    <div id="addVaccineModal" class="fixed inset-0 bg-black/50 modal-overlay hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 fade-in">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gray-800">Thêm lịch tiêm ngừa</h3>
+                    <button onclick="closeVaccineModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
+                        <i class="fas fa-times text-gray-500"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="addVaccineForm" class="p-6 space-y-5">
+                <input type="hidden" id="vaccinePetId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Thú cưng</label>
+                    <input type="text" id="vaccinePetName" readonly class="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Loại Vaccine *</label>
+                    <select id="vaccineType" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">Chọn loại vaccine</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ngày tiêm dự kiến *</label>
+                    <input type="date" id="vaccineDate" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
+                    <textarea id="vaccineNote" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none" placeholder="Ghi chú thêm..."></textarea>
+                </div>
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeVaccineModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition">Hủy</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">Lưu lịch tiêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        let pets = JSON.parse(localStorage.getItem('pets')) || [];
+        let vaccines = JSON.parse(localStorage.getItem('vaccines')) || [];
+
+        const dogVaccines = [
+            'Vaccine 5 bệnh (5in1)',
+            'Vaccine 7 bệnh (7in1)',
+            'Vaccine Dại',
+            'Vaccine Lepto',
+            'Vaccine Kennel Cough'
+        ];
+
+        const catVaccines = [
+            'Vaccine 3 bệnh (FVRCP)',
+            'Vaccine 4 bệnh (FVRCP+)',
+            'Vaccine Dại',
+            'Vaccine FeLV (Bạch cầu mèo)'
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPets();
+            renderSchedule();
+            updateStats();
+            
+            document.getElementById('searchPet').addEventListener('input', filterPets);
+            document.getElementById('filterType').addEventListener('change', filterPets);
+        });
+
+        // Modal functions
+        function openAddPetModal() {
+            document.getElementById('addPetModal').classList.remove('hidden');
+            document.getElementById('addPetModal').classList.add('flex');
+        }
+
+        function closeAddPetModal() {
+            document.getElementById('addPetModal').classList.add('hidden');
+            document.getElementById('addPetModal').classList.remove('flex');
+            document.getElementById('addPetForm').reset();
+        }
+
+        function openVaccineModal(petId) {
+            const pet = pets.find(p => p.id === petId);
+            if (!pet) return;
+            
+            document.getElementById('vaccinePetId').value = petId;
+            document.getElementById('vaccinePetName').value = pet.name;
+            
+            const vaccineSelect = document.getElementById('vaccineType');
+            vaccineSelect.innerHTML = '<option value="">Chọn loại vaccine</option>';
+            const vaccineList = pet.type === 'dog' ? dogVaccines : catVaccines;
+            vaccineList.forEach(v => {
+                vaccineSelect.innerHTML += `<option value="${v}">${v}</option>`;
+            });
+            
+            document.getElementById('addVaccineModal').classList.remove('hidden');
+            document.getElementById('addVaccineModal').classList.add('flex');
+        }
+
+        function closeVaccineModal() {
+            document.getElementById('addVaccineModal').classList.add('hidden');
+            document.getElementById('addVaccineModal').classList.remove('flex');
+            document.getElementById('addVaccineForm').reset();
+        }
+
+        // Form submissions
+        document.getElementById('addPetForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const pet = {
+                id: Date.now(),
+                name: document.getElementById('petName').value,
+                type: document.getElementById('petType').value,
+                breed: document.getElementById('petBreed').value || 'Không xác định',
+                birthdate: document.getElementById('petBirthdate').value,
+                weight: document.getElementById('petWeight').value,
+                ownerName: document.getElementById('ownerName').value,
+                ownerPhone: document.getElementById('ownerPhone').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            pets.push(pet);
+            localStorage.setItem('pets', JSON.stringify(pets));
+            
+            closeAddPetModal();
+            renderPets();
+            updateStats();
+            showNotification('Đã thêm thú cưng thành công!', 'success');
+        });
+
+        document.getElementById('addVaccineForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const vaccine = {
+                id: Date.now(),
+                petId: parseInt(document.getElementById('vaccinePetId').value),
+                type: document.getElementById('vaccineType').value,
+                date: document.getElementById('vaccineDate').value,
+                note: document.getElementById('vaccineNote').value,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            vaccines.push(vaccine);
+            localStorage.setItem('vaccines', JSON.stringify(vaccines));
+            
+            closeVaccineModal();
+            renderPets();
+            renderSchedule();
+            updateStats();
+            showNotification('Đã thêm lịch tiêm thành công!', 'success');
+        });
+
+        // Render functions
+        function renderPets(filteredPets = null) {
+            const petsToRender = filteredPets || pets;
+            const container = document.getElementById('petsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (petsToRender.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            container.innerHTML = petsToRender.map(pet => {
+                const petVaccines = vaccines.filter(v => v.petId === pet.id);
+                const completedVaccines = petVaccines.filter(v => v.status === 'done').length;
+                const pendingVaccines = petVaccines.filter(v => v.status === 'pending').length;
+                
+                const icon = pet.type === 'dog' ? 'fa-dog' : 'fa-cat';
+                const bgColor = pet.type === 'dog' ? 'from-blue-500 to-blue-600' : 'from-amber-500 to-amber-600';
+                
+                return `
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden card-hover fade-in">
+                        <div class="bg-gradient-to-r ${bgColor} p-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas ${icon} text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold">${pet.name}</h4>
+                                        <p class="text-white/80 text-sm">${pet.breed}</p>
+                                    </div>
+                                </div>
+                                <div class="dropdown relative">
+                                    <button onclick="toggleDropdown(${pet.id})" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div id="dropdown-${pet.id}" class="hidden absolute right-0 top-12 bg-white rounded-lg shadow-xl py-2 w-48 z-10">
+                                        <button onclick="openVaccineModal(${pet.id})" class="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center">
+                                            <i class="fas fa-syringe mr-3 text-green-500"></i>Thêm lịch tiêm
+                                        </button>
+                                        <button onclick="deletePet(${pet.id})" class="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center">
+                                            <i class="fas fa-trash mr-3"></i>Xóa thú cưng
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p class="text-gray-500 text-xs">Chủ sở hữu</p>
+                                    <p class="font-medium text-gray-800">${pet.ownerName}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-xs">Điện thoại</p>
+                                    <p class="font-medium text-gray-800">${pet.ownerPhone}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-xs">Ngày sinh</p>
+                                    <p class="font-medium text-gray-800">${pet.birthdate ? formatDate(pet.birthdate) : 'Chưa cập nhật'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-xs">Cân nặng</p>
+                                    <p class="font-medium text-gray-800">${pet.weight ? pet.weight + ' kg' : 'Chưa cập nhật'}</p>
+                                </div>
+                            </div>
+                            <div class="border-t pt-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                                            <span class="text-sm text-gray-600">${completedVaccines} đã tiêm</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-clock text-amber-500 mr-1"></i>
+                                            <span class="text-sm text-gray-600">${pendingVaccines} chờ tiêm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSchedule() {
+            const tbody = document.getElementById('scheduleTableBody');
+            const emptySchedule = document.getElementById('emptySchedule');
+            
+            const sortedVaccines = [...vaccines].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (sortedVaccines.length === 0) {
+                tbody.innerHTML = '';
+                emptySchedule.classList.remove('hidden');
+                return;
+            }
+            
+            emptySchedule.classList.add('hidden');
+            
+            tbody.innerHTML = sortedVaccines.map(vaccine => {
+                const pet = pets.find(p => p.id === vaccine.petId);
+                if (!pet) return '';
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const vaccineDate = new Date(vaccine.date);
+                
+                let status, statusClass, statusText;
+                if (vaccine.status === 'done') {
+                    status = 'done';
+                    statusClass = 'status-done';
+                    statusText = 'Đã tiêm';
+                } else if (vaccineDate < today) {
+                    status = 'overdue';
+                    statusClass = 'status-overdue';
+                    statusText = 'Quá hạn';
+                } else {
+                    status = 'pending';
+                    statusClass = 'status-pending';
+                    statusText = 'Chờ tiêm';
+                }
+                
+                const icon = pet.type === 'dog' ? 'fa-dog' : 'fa-cat';
+                
+                return `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas ${icon} text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-800">${pet.name}</p>
+                                    <p class="text-sm text-gray-500">${pet.breed}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="font-medium text-gray-800">${vaccine.type}</p>
+                            ${vaccine.note ? `<p class="text-sm text-gray-500">${vaccine.note}</p>` : ''}
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="font-medium text-gray-800">${formatDate(vaccine.date)}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="${statusClass} text-white px-3 py-1 rounded-full text-sm font-medium">${statusText}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-2">
+                                ${vaccine.status !== 'done' ? `
+                                    <button onclick="markAsDone(${vaccine.id})" class="w-9 h-9 bg-green-100 text-green-600 rounded-lg flex items-center justify-center hover:bg-green-200 transition" title="Đánh dấu đã tiêm">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteVaccine(${vaccine.id})" class="w-9 h-9 bg-red-100 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-200 transition" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const totalPets = pets.length;
+            const vaccinatedPets = pets.filter(pet => {
+                const petVaccines = vaccines.filter(v => v.petId === pet.id);
+                return petVaccines.length > 0 && petVaccines.every(v => v.status === 'done');
+            }).length;
+            
+            const pendingVaccinesCount = vaccines.filter(v => {
+                const vaccineDate = new Date(v.date);
+                return v.status === 'pending' && vaccineDate >= today;
+            }).length;
+            
+            const overdueCount = vaccines.filter(v => {
+                const vaccineDate = new Date(v.date);
+                return v.status === 'pending' && vaccineDate < today;
+            }).length;
+            
+            document.getElementById('totalPets').textContent = totalPets;
+            document.getElementById('vaccinatedPets').textContent = vaccinatedPets;
+            document.getElementById('pendingVaccines').textContent = pendingVaccinesCount;
+            document.getElementById('overduePets').textContent = overdueCount;
+        }
+
+        // Actions
+        function toggleDropdown(petId) {
+            const dropdown = document.getElementById(`dropdown-${petId}`);
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+                if (d.id !== `dropdown-${petId}`) d.classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        }
+
+        function deletePet(petId) {
+            if (!confirm('Bạn có chắc muốn xóa thú cưng này? Tất cả lịch tiêm liên quan cũng sẽ bị xóa.')) return;
+            
+            pets = pets.filter(p => p.id !== petId);
+            vaccines = vaccines.filter(v => v.petId !== petId);
+            
+            localStorage.setItem('pets', JSON.stringify(pets));
+            localStorage.setItem('vaccines', JSON.stringify(vaccines));
+            
+            renderPets();
+            renderSchedule();
+            updateStats();
+            showNotification('Đã xóa thú cưng!', 'success');
+        }
+
+        function markAsDone(vaccineId) {
+            const vaccine = vaccines.find(v => v.id === vaccineId);
+            if (vaccine) {
+                vaccine.status = 'done';
+                localStorage.setItem('vaccines', JSON.stringify(vaccines));
+                renderSchedule();
+                renderPets();
+                updateStats();
+                showNotification('Đã cập nhật trạng thái tiêm!', 'success');
+            }
+        }
+
+        function deleteVaccine(vaccineId) {
+            if (!confirm('Bạn có chắc muốn xóa lịch tiêm này?')) return;
+            
+            vaccines = vaccines.filter(v => v.id !== vaccineId);
+            localStorage.setItem('vaccines', JSON.stringify(vaccines));
+            
+            renderSchedule();
+            renderPets();
+            updateStats();
+            showNotification('Đã xóa lịch tiêm!', 'success');
+        }
+
+        function filterPets() {
+            const search = document.getElementById('searchPet').value.toLowerCase();
+            const type = document.getElementById('filterType').value;
+            
+            let filtered = pets;
+            
+            if (search) {
+                filtered = filtered.filter(p => 
+                    p.name.toLowerCase().includes(search) || 
+                    p.ownerName.toLowerCase().includes(search) ||
+                    p.breed.toLowerCase().includes(search)
+                );
+            }
+            
+            if (type !== 'all') {
+                filtered = filtered.filter(p => p.type === type);
+            }
+            
+            renderPets(filtered);
+        }
+
+        // Utilities
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-2xl text-white font-medium z-50 fade-in ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+            }
+        });
+    </script>
+</body>
+</html>
